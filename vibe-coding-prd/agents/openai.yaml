@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vibe Coding PRD"
+  short_description: "把需求材料提炼成编码 Agent 可用 PRD 文档"
+  default_prompt: "Use $vibe-coding-prd to turn my rough requirement into a concise Vibe coding PRD for Claude Code or Codex."
