@@ -1,156 +1,93 @@
 ---
 name: vibe-coding-prd
-description: Turn user requirements, rough PRDs, competitor analysis, links, notes, or vague product ideas into a concise Markdown PRD that can be sent directly to Claude Code, Codex, or another coding agent for Vibe coding. Use when the user says "帮我写一个用来vibe coding的PRD" or asks to extract, refine, rewrite, or produce a coding-agent-ready PRD from demand notes, original PRDs, product research, competitor analysis, or unclear feature ideas.
+description: Turn fuzzy ideas, clear requirements, raw engineering PRDs, Feishu/Lark docs, competitor analysis, research notes, screenshots, or mixed product material into a concise but complete Markdown PRD that can be sent directly to Claude Code, Codex, or another coding agent. Use when the user says "帮我写一个用来vibe coding的PRD", asks for a Vibe Coding PRD, wants to transform requirements into coding-agent-ready implementation instructions, or needs product clarification before coding.
 ---
 
 # Vibe Coding PRD
 
-## Purpose
+Create an implementation-ready PRD for coding agents. Keep it concise, but do not omit decisions that affect scope, architecture, data, AI workflow, UI states, failure handling, or acceptance.
 
-Create a concise PRD for a coding agent. Strip away business fluff, keep implementation-relevant context, and force explicit user confirmation before locking scope, priority, UI shape, or assumptions.
+## Non-Negotiable Rules
 
-Use [references/prd-template.md](references/prd-template.md) as the final output skeleton.
+- Do not guess core intent. If user, scenario, pain point, product shape, MVP scope, technical direction, or wireframe is unclear, ask before continuing.
+- Use modal/user-input confirmation tools when available. If unavailable, ask numbered choice questions in chat.
+- Every blocking question must be option-based: 2-4 choices, one recommended choice when possible, and a short tradeoff note. Use open-ended questions only when choices would be misleading.
+- Move through the four confirmation gates in order: demand definition, feature/MVP priority, technical stack, core wireframe. Do not output the final PRD until all gates are confirmed or explicitly marked as assumed by the user.
+- Strip business persuasion, market sizing, vision slogans, organization background, and repeated narrative unless it changes implementation.
+- Preserve implementation signals: users, roles, workflows, pages, states, data objects, permissions, APIs/events, AI prompts/tools, evaluation, fallbacks, observability, and acceptance criteria.
+- For AI products, expose the Product Engineer route: client action, API/event entry, domain service, orchestrator, model/tool/retrieval dependency, data read/write, state transition, human review/fallback, trace/metric/audit, cost or release control.
+- Acceptance criteria must be observable and reproducible. Avoid vague criteria such as "体验良好", "更智能", "页面美观", or "性能优秀".
+- Default to the user's language. If the user writes in Chinese, ask and output in Chinese while preserving useful technical terms.
+- The skill produces PRDs, not product code. If the user asks to implement after the PRD, treat that as a separate coding task.
 
-## Core Rules
+## Workflow Map
 
-- Do not infer what the user wants when the requirement is unclear. Ask targeted questions before continuing.
-- Prefer 2-4 choice questions when guiding a vague user. Include an "other / not sure" option when useful.
-- When the runtime provides a modal/user-input tool, use it for confirmations and priority choices. If no modal tool is available, ask concise questions in chat.
-- Keep the PRD lean. Write for Claude Code, Codex, or another coding agent, not for executives.
-- Remove or compress commercial value, market background, vision statements, org process, and non-implementation narrative unless needed to understand product behavior.
-- Every final functional requirement must have observable acceptance criteria. Avoid vague criteria such as "good experience", "fast", "beautiful", "intelligent", or "stable" unless quantified or tied to visible behavior.
-- Confirm major decisions before finalizing: product definition, MVP scope, priority order, technical stack, prototype/wireframe, and any explicit exclusions.
+1. **Classify and extract input**: read [references/01-input-routing.md](references/01-input-routing.md).
+2. **Clarify with gates**: read [references/02-confirmation-gates.md](references/02-confirmation-gates.md).
+3. **Design features and MVP**: read [references/03-feature-mvp.md](references/03-feature-mvp.md).
+4. **Recommend technical stack**: read [references/04-tech-stack.md](references/04-tech-stack.md).
+5. **Draft core wireframe**: read [references/05-wireframe.md](references/05-wireframe.md).
+6. **Write detailed modules**: read [references/06-detailed-modules.md](references/06-detailed-modules.md).
+7. **For AI products or AI-heavy modules**: also read [references/07-ai-pe-agent-design.md](references/07-ai-pe-agent-design.md).
+8. **Write acceptance criteria**: read [references/08-acceptance-criteria.md](references/08-acceptance-criteria.md).
+9. **Generate final PRD**: read [references/09-final-prd-template.md](references/09-final-prd-template.md).
+
+Read only the references needed for the current phase. If the user provides a raw PRD link, read the source material before summarizing. For Feishu/Lark Docx/Wiki links, use the available `lark-doc` or equivalent document connector/skill; if access fails, ask the user to grant access, export Markdown, or paste the content.
 
 ## Input Classification
 
-Classify the user's material first:
+Classify the material as exactly one primary type:
 
-1. **Clear requirement**: includes a recognizable user, scenario, pain point, and desired product outcome.
-   - Continue to Product Definition and Functional Design.
-2. **Original PRD**: already written for engineers, often with feature lists, screens, rules, API notes, data requirements, or links.
-   - Extract only information a coding agent needs.
-   - If it is a Feishu/Lark document or another linked source and a relevant document skill/tool is available, read the source before summarizing. If access is unavailable, ask the user to paste the content or grant access.
-3. **Competitor analysis / research**: compares products, features, flows, pricing, positioning, screenshots, or notes.
-   - Convert observations into candidate user needs and feature options.
-   - Ask the user to choose which competitor behaviors to adopt, avoid, or defer.
-4. **Unclear idea / other**: lacks clear user, scenario, pain point, or product shape.
-   - Do not start writing the PRD.
-   - Ask choice-based discovery questions until the real need is clear enough.
+- `明确需求`: already includes user, scenario, pain point, and product form/output.
+- `原始 PRD`: long or structured product/engineering document, Feishu/Lark doc, Markdown, PDF, or PRD-like spec.
+- `竞品分析`: mainly describes other products, screenshots, comparisons, flows, or feature inspiration.
+- `混合材料`: multiple source types with possible conflicts.
+- `信息不足`: missing user, scenario, pain point, or product shape.
 
-State the classification briefly and explain what is missing or what will be extracted.
+State the classification briefly, what will be extracted, and whether confirmation is needed.
 
-## Clarification Flow
+## Confirmation Gates
 
-For vague input, ask only the next useful set of questions. Prefer choices like:
+Gate 1: Demand definition.
 
-- Target user: "Who is this for? A) individual users B) internal operators C) creators/sellers D) developers E) not sure"
-- Scenario: "Where does this happen? A) mobile daily use B) desktop workbench C) internal admin flow D) chat/agent workflow E) other"
-- Pain point: "What problem matters most? A) save time B) reduce mistakes C) organize information D) automate decisions E) improve conversion"
-- Product shape: "What should we build first? A) web app B) mobile-friendly web page C) browser extension D) chatbot/agent E) script/internal tool"
+- 给谁用
+- 什么场景
+- 解决什么问题
+- 什么产品形态
+- 核心输入/输出
+- 明确不做
 
-Continue only after the user confirms enough of:
+Gate 2: Feature list and priority.
 
-- user group
-- scenario
-- pain point
-- product form
-- desired output or core job-to-be-done
+- 一级模块、二级功能、功能描述
+- P0/P1/P2/Later/不做
+- MVP development order
+- dependencies and reason for priority
 
-## Design Workflow
+Gate 3: Technical stack.
 
-### 1. Product Definition
+- one recommended plan and, only when useful, one simpler or more scalable alternative
+- explain tradeoffs in plain language for non-technical users
+- map important features to implementation choices
 
-Write a short definition covering:
+Gate 4: Core wireframe.
 
-- who it serves
-- in what scenario
-- what pain it solves
-- what product form to build
-- what the MVP must prove
+- 1-3 core pages or interfaces
+- ASCII/text wireframes
+- key actions, states, empty/error/loading/success states
+- main click path
 
-Ask the user to confirm or correct it before proceeding if any part is uncertain.
+## Final PRD Standard
 
-### 2. Functional Inventory
+The final Markdown PRD must let a coding agent start without guessing:
 
-Create a function table with:
+- what to build and what not to build
+- first version scope and priority order
+- pages, modules, states, and flows
+- technical stack and architecture route
+- data entities, APIs/events, permissions, and integrations when relevant
+- AI agent workflow, prompts, tools, memory, evaluation, and fallback when relevant
+- acceptance criteria that can become tests or manual checks
+- suggested coding-agent execution order
 
-- Level 1 module
-- Level 2 feature
-- Description
-- MVP / Later / Not doing
-- Suggested priority
-- Reason for priority
-
-Ask the user to confirm:
-
-- which features to build now
-- which features not to build
-- which features to defer
-- whether priority should optimize for speed, demo quality, technical risk, user value, or completeness
-
-Prioritize MVP features that unblock a usable end-to-end flow before secondary settings, analytics, admin polish, or edge-case automation.
-
-### 3. Technical Stack Recommendation
-
-Recommend a stack based on:
-
-- product size
-- interaction complexity
-- AI/agent intensity
-- data storage needs
-- authentication needs
-- deadline/time limit
-- the user's likely technical level
-
-Explain recommendations in plain language. Give one primary recommendation and, only when helpful, one simpler or more scalable alternative.
-
-For each major feature, mention the likely implementation approach or relevant technology in user-friendly terms. Do not overwhelm non-technical users with unnecessary frameworks.
-
-### 4. Wireframe / Prototype Frame
-
-Design low-fidelity core screens in text. Include:
-
-- screen names
-- main regions
-- key controls
-- main user flow
-- important states, such as empty, loading, error, generated result, confirmation
-
-Ask the user to confirm the wireframe before writing detailed functional modules.
-
-### 5. Detailed Functional Modules
-
-For AI products, include:
-
-- agent workflow
-- role boundaries between user, app, model, tools, and storage
-- prompt design for system/developer/user prompts when relevant
-- tool system, including tool name, purpose, input, output, failure handling
-- memory/data policy if the product stores user context
-- fallback behavior when the model is uncertain
-
-For traditional products, include:
-
-- data model or key entities
-- user actions and system responses
-- permissions/authentication if needed
-- state transitions
-- validation rules
-- integration points
-- edge cases and error handling
-
-### 6. Acceptance Criteria
-
-Write acceptance criteria per feature. Use observable steps and outcomes:
-
-- "When the user clicks X, Y appears."
-- "Given A input, when the user submits, the system stores B and shows C."
-- "If validation fails, show message D and do not proceed."
-
-Avoid untestable criteria. Replace vague wording with specific visible behavior, data changes, or measurable thresholds.
-
-### 7. Final PRD Output
-
-After required confirmations, output a complete Markdown PRD using [references/prd-template.md](references/prd-template.md). The final PRD should be directly pasteable into Claude Code/Codex.
-
-Include explicit "Not in Scope" and "Open Questions" sections. If no open questions remain, write "None".
+If confirmation is incomplete, output a `待确认项` section and ask the next option-based question instead of pretending the PRD is final.
